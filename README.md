@@ -1,2 +1,2 @@
 # blazor-experiment
-Side project testing out Blazor in .NET 8
+Side project testing out Blazor in .NET 6

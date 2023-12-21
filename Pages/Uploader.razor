@@ -1,0 +1,39 @@
+@page "/Uploader"
+@using Azure.Storage.Blobs
+@inject IConfiguration Configuration;
+
+<h3>Uploader</h3>
+<InputFile class="form-control" OnChange="@Upload" multiple></InputFile>
+<div class="alert alert-primary">
+    @if (_uploading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    }
+    <span>@_message</span>
+</div>
+
+@code {
+    private string _message = "On standby.";
+    private bool _uploading;
+    
+    private async Task Upload(InputFileChangeEventArgs e)
+    {
+        _message = "Uploading...";
+        _uploading = true;
+        
+        var blobServiceClient = new BlobServiceClient(Configuration.GetConnectionString("Storage"));
+        var blobContainerClient = blobServiceClient.GetBlobContainerClient("blazor");
+        await blobContainerClient.CreateIfNotExistsAsync();
+        
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var blobClient = blobContainerClient.GetBlobClient($"{Path.GetRandomFileName()}.jpg");
+            await blobClient.UploadAsync(file.OpenReadStream(long.MaxValue));
+        }
+
+        _uploading = false;
+        _message = $"Uploaded {e.GetMultipleFiles().Count} files.";
+    }
+}
